@@ -1,0 +1,5 @@
+C:/Users/jessg/OneDrive - James Cook University/Documents/GitHub/CC2511-A2/build/elf2uf2/CMakeFiles/elf2uf2.dir
+C:/Users/jessg/OneDrive - James Cook University/Documents/GitHub/CC2511-A2/build/elf2uf2/CMakeFiles/edit_cache.dir
+C:/Users/jessg/OneDrive - James Cook University/Documents/GitHub/CC2511-A2/build/elf2uf2/CMakeFiles/rebuild_cache.dir
+C:/Users/jessg/OneDrive - James Cook University/Documents/GitHub/CC2511-A2/build/elf2uf2/boot_uf2_headers/CMakeFiles/edit_cache.dir
+C:/Users/jessg/OneDrive - James Cook University/Documents/GitHub/CC2511-A2/build/elf2uf2/boot_uf2_headers/CMakeFiles/rebuild_cache.dir
