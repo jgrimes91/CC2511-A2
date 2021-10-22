@@ -18,14 +18,19 @@
 #define UART_TX 1
 #define X_DIR 3
 #define X_STEP 4
-#define Y_DIR 6
-#define Y_STEP 7
-#define Z_DIR 11
-#define Z_STEP 10
+#define Y_DIR 9
+#define Y_STEP 10
+#define Z_DIR 10
+#define Z_STEP 11
 #define SPINDLE 15
 #define MODE0 20
 #define MODE1 19
 #define MODE2 18
+
+uint8_t xdir, ydir, zdir, spindle = 0;
+uint8_t spindle_up, spindle_down;
+uint8_t x_length, y_length, z_length;
+uint8_t spindle_speed;
 
 // Allocating to buffer
 volatile char buffer[100];
@@ -86,16 +91,21 @@ void on_uart_rx()
   }
 }
 
-void display_menu(){
-  // Displays the menu
+void send_char(char ch)
+{
+  // Checking if character is writeable
+  if (uart_is_writable(UART_ID))
+  {
+    uart_putc(UART_ID, ch);
+  }
 }
 
-void send_char(char ch){
-  // Checking if character is writeable
-   if (uart_is_writable(UART_ID))
-    {
-      uart_putc(UART_ID, ch);
-    }
+void calibration(){
+  // Calibrate to find/determine the boundaries of the working space - calculate from the corners
+  // First calibrate in the x direction using a&d
+  // Second calibrate in the y direction using w&s
+  // Third z direction for the spindle
+
 }
 
 int main(void)
@@ -121,6 +131,11 @@ int main(void)
   gpio_init(SPINDLE);
   gpio_set_dir(SPINDLE, true);
 
+  // Set up spindle PWM
+  gpio_set_function(SPINDLE, GPIO_FUNC_UART);
+  uint spindle_slice = pwm_gpio_to_slice_num(SPINDLE);
+  pwm_set_enabled(spindle_slice, true);
+
   // Booleans to control directions for step motors
   bool step, dir = false;
 
@@ -144,17 +159,60 @@ int main(void)
 
   while (true)
   {
-    // TODO - Repeated code here
-    // set_x_pins(step, dir);
-    // set_y_pins(step, dir);
-    // set_z_pins(step, dir);
-    display_menu();
+    set_x_pins(step, dir);
+    set_y_pins(step, dir);
+    set_z_pins(step, dir);
 
-    while (!input_ready){
-      __asm("wfi"); // Wait in low power mode 
+    while (!input_ready)
+    {
+      __asm("wfi"); // Wait in low power mode
     }
-    if (input_ready == true){
-      // Do something here 
+
+    if (input_ready == true)
+    {
+      // Manual mode -- TODO maybe serperate 
+      // X direction
+      if (sscanf(buffer, "a %hhu", &xdir) == 1)
+      {
+        step = ! step;
+        idx = 0;
+      }
+      else if (sscanf(buffer, "d %hhu", &xdir) == 1)
+      {
+        dir = ! dir;
+        idx = 0;
+      }
+      // Y direction
+      else if (sscanf(buffer, "w %hhu", &ydir) == 1)
+      {
+        step = ! step;
+        idx = 0;
+      }
+      else if (sscanf(buffer, "s %hhu", &ydir) == 1)
+      {
+        dir = ! dir;
+        idx = 0;
+      }
+      // Z direction
+      else if (sscanf(buffer, "z %hhu", &zdir) == 1)
+      {
+        step = ! step;
+        idx = 0;
+      }
+      else if (sscanf(buffer, "x %hhu", &zdir) == 1)
+      { 
+        dir = ! dir;
+        idx = 0;
+      }
+      // Spindle
+      else if (sscanf(buffer, "on %hhu", &spindle_speed) == 1){
+        pwm_set_gpio_level(SPINDLE, &spindle_speed);
+        idx = 0;
+      }
+      else if (0 == strcmp(buffer, "off ")){
+         pwm_set_gpio_level(SPINDLE, 0);
+      }
     }
+    input_ready = false;
   }
 }
